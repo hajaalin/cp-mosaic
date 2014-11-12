@@ -1,9 +1,15 @@
-from ij import IJ
+from ij import IJ, WindowManager
 from ij.process import StackStatistics
 from mosaic.plugins import ParticleTracker_ as PT
 import sys
 
-imp = IJ.openImage(sys.argv[1])
+# read image from command line
+if len(sys.argv) > 1:
+    imp = IJ.openImage(sys.argv[1])
+# if command line not given, use current image (works in CellProfiler)
+else:
+    imp = WindowManager.getCurrentImage()
+
 pt = PT()
 
 pt.frames_number = 1
