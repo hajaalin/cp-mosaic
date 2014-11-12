@@ -1,6 +1,8 @@
-from ij import IJ, WindowManager
-from ij.process import StackStatistics
+from ij import IJ, ImagePlus, WindowManager
+from ij.process import ByteProcessor, StackStatistics
 from mosaic.plugins import ParticleTracker_ as PT
+
+import re
 import sys
 
 # read image from command line
@@ -25,12 +27,35 @@ pt.makeKernel(pt.radius)
 pt.generateMask(pt.radius)
 
 pt.setup("only_detect", imp)
-print pt.only_detect
 
 pt.processFrames()
 frame = pt.frames[0]
-print
-print frame.toString()
 
+prog = re.compile("%.*Particle (\d+) \((\d+.\d+), (\d+.\d+)\)")
+lines = frame.toString().split("\n")
+
+ip_old = imp.getProcessor()
+ip_new = ByteProcessor(ip_old.getWidth(), ip_old.getHeight())
+for l in lines:
+    #print "line", l
+    result = re.search(prog, l)
+    if result:
+        n = result.groups()[0]
+        y = result.groups()[1]
+        x = result.groups()[2]
+        #print n, x, y 
+
+        x = int(round(float(x)))
+        y = int(round(float(y)))
+        ip_new.putPixel(x,y,255)
+
+imp_new = ImagePlus("mosaic_pt", ip_new)
+
+# show image 
+if len(sys.argv) > 1:
+    imp_new.show()
+# if command line not given, set current image (works in CellProfiler)
+else:
+    WindowManager.setTempCurrentImage(imp_new)
 
 
